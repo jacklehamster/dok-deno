@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<!--
+	Dok-gamelib engine
+
+	Description: Game engine for producing web games easily using JavaScript and WebGL
+	Author: jacklehamster
+	Sourcode: https://github.com/jacklehamster/dok-gamelib
+	Year: 2020
+ -->
+<html lang="en">
+	<head>
+        <title>Hello World</title>
+		<meta charset="utf-8"/>
+		<meta name="description" content="Description">
+
+		<style type="text/css">
+			canvas {  
+			  image-rendering: -moz-crisp-edges;
+			  image-rendering: -webkit-crisp-edges;
+			  image-rendering: pixelated;
+			  image-rendering: crisp-edges;
+			  border: 1px solid #666666;
+			}
+
+			html, body {
+			    margin: 0;
+			    height: 100%;
+				background:
+				  linear-gradient(27deg, rgba(0,155,0,.8), rgba(0,155,0,0) 70.71%),
+				  linear-gradient(117deg, rgba(55,55,0,.8), rgba(55,55,0) 70.71%),
+				  linear-gradient(236deg, rgba(0,55,55,.8), rgba(0,55,55,0) 70.71%);
+
+			    color: #aaaaaa;
+			    touch-action: none;
+			    overflow: hidden;
+			}
+
+			.container {
+			  display: flex;
+			  flex-direction: column;
+			  justify-content: center;
+			  align-items: center;
+			  width: 100%;
+			  height: 100%;
+			  will-change: transform;
+			}
+
+			.loader {
+			  border: 16px solid #f3f3f3;
+			  border-radius: 50%;
+			  border-top: 16px solid #3498db;
+			  border-left: 16px solid #54a8eb;
+			  border-right: 16px solid #84b8fb;
+			  border-bottom: 16px solid #a4d8fb;
+			  -webkit-animation: spin 2s linear infinite; /* Safari */
+			  animation: spin .3s linear infinite;
+				width: 100px;
+				height: 100px;
+				margin-top: -50px;
+				margin-left: -50px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				position: fixed;
+			}
+
+			.loader.loaded {
+				display: none;
+			}
+
+			@-webkit-keyframes spin {
+			  0% { -webkit-transform: rotate(0deg); }
+			  100% { -webkit-transform: rotate(360deg); }
+			}
+
+			@keyframes spin {
+			  0% { transform: rotate(0deg); }
+			  100% { transform: rotate(360deg); }
+			}			
+
+		</style>
+
+		<script src="lib/gl-matrix.js"></script>
+		<script src="lib/dom.js"></script>
+		<script src="lib/shader.js"></script>
+		<script src="lib/scene-renderer.js"></script>
+		<script src="lib/sprite-renderer.js"></script>
+		<script src="lib/engine.js"></script>
+		<script src="generated/config.js"></script>
+		<script>
+			const engine = new Engine();
+			engine.init().catch(e => {
+				console.error(e);
+			});
+		</script>
+
+	</head>
+	<body>
+		<div class="container">
+			<div class="loader"></div>
+			<canvas id="canvas" width=64 height=64 style="width: 512px; height: 512px">
+			</canvas>		
+		</div>
+	</body>
+</html>

@@ -1,0 +1,14 @@
+{
+	"position": {
+		"type": "FLOAT"
+	},
+	"color": {
+		"instances": 1,
+		"type": "UNSIGNED_BYTE",
+		"normalize": true
+	},
+	"matrix": {
+		"instances": 1,
+		"type": "FLOAT"
+	}
+}

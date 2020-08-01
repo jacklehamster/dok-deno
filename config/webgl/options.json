@@ -1,0 +1,12 @@
+{
+	"indexedBuffer": true,
+	"context": {
+		"antialias": false,
+		"preserveDrawingBuffer": false,
+		"alpha": false,
+		"depth": true,
+		"stencil": false,
+		"desynchronized": true,
+		"premultipliedAlpha": true
+	}
+}
