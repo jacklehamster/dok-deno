@@ -6,7 +6,7 @@ const config = {
       "options": {
          "indexedBuffer": true,
          "context": {
-            "antialias": false,
+            "antialias": true,
             "preserveDrawingBuffer": false,
             "alpha": false,
             "depth": true,
