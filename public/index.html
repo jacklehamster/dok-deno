@@ -85,15 +85,15 @@
 
 		</style>
 
+		<script src="generated/config.js"></script>
 		<script src="lib/gl-matrix.js"></script>
 		<script src="lib/dom.js"></script>
 		<script src="lib/shader.js"></script>
 		<script src="lib/scene-renderer.js"></script>
-		<script src="lib/sprite-renderer.js"></script>
+		<script src="lib/buffer-renderer.js"></script>
 		<script src="lib/engine.js"></script>
-		<script src="generated/config.js"></script>
 		<script>
-			const engine = new Engine();
+			const engine = new Engine(document, config);
 			engine.init().catch(e => {
 				console.error(e);
 			});
@@ -103,7 +103,7 @@
 	<body>
 		<div class="container">
 			<div class="loader"></div>
-			<canvas id="canvas" width=64 height=64 style="width: 512px; height: 512px">
+			<canvas id="canvas" width=1024 height=1024 style="width: 512px; height: 512px">
 			</canvas>		
 		</div>
 	</body>

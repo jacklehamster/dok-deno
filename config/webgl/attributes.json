@@ -1,14 +1,22 @@
 {
 	"position": {
-		"type": "FLOAT"
+		"type": "FLOAT",
+		"usage": "STATIC_DRAW"
+	},
+	"isPerspective": {
+		"instances": 1,
+		"type": "FLOAT",
+		"usage": "STATIC_DRAW"
 	},
 	"color": {
 		"instances": 1,
 		"type": "UNSIGNED_BYTE",
-		"normalize": true
+		"normalize": true,
+		"usage": "DYNAMIC_DRAW"
 	},
 	"matrix": {
 		"instances": 1,
-		"type": "FLOAT"
+		"type": "FLOAT",
+		"usage": "DYNAMIC_DRAW"
 	}
 }

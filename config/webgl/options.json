@@ -1,5 +1,4 @@
 {
-	"indexedBuffer": true,
 	"context": {
 		"antialias": true,
 		"preserveDrawingBuffer": false,
@@ -8,5 +7,7 @@
 		"stencil": false,
 		"desynchronized": true,
 		"premultipliedAlpha": true
-	}
+	},
+	"maxInstanceCount": 1000,
+	"cullFace": "BACK"
 }

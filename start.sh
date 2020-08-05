@@ -1,3 +1,3 @@
 #!/bin/bash
 
-deno run --allow-net --unstable --allow-read --allow-write  --no-check index.ts
+deno run --allow-net --allow-read --allow-write --unstable index.ts

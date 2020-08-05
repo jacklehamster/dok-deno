@@ -19,7 +19,7 @@ class Shader {
 	}
 
 	linkShader(vertexShaderCode, fragmentShaderCode) {
-		const program = this.gl.createProgram();
+		const program = this.program = this.gl.createProgram();
 		const vertexShader = this.initShader(this.gl.VERTEX_SHADER, vertexShaderCode);
 		const fragmentShader = this.initShader(this.gl.FRAGMENT_SHADER, fragmentShaderCode);
 		this.gl.attachShader(program, vertexShader);
@@ -31,44 +31,51 @@ class Shader {
 		  throw new Error('Unable to initialize the shader program:\n' + this.gl.getProgramInfoLog(program));
 		}
 
-		const attributes = this.getAttributes(vertexShaderCode);
-		attributes.forEach(({attributeType, name, dataType}) => {
+		this.initUniforms(program, vertexShaderCode);
+		this.initAtttributes(program, vertexShaderCode, this.webgl.options.maxInstanceCount);
+	}
+
+	initUniforms(program, vertexShaderCode) {
+		const variables = this.getVertexShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "uniform");
+		variables.forEach(({name, dataType}) => {
 			//	dataType is vec4 / mat4 etc...
-			switch(attributeType) {
-				case "attribute":
-					const location = this.gl.getAttribLocation(program, name);
-					this.attributes[name] = {
-						location,
-						buffer: this.initializeAttributeBuffer(name, dataType, location, this.webgl.attributes[name]),
-					};
-					this.enableLocations(this.attributes[name].location, dataType);
-					break;
-				case "uniform":
-					this.uniforms[name] = {
-						location: this.gl.getUniformLocation(program, name),
-					};
-					this.enableLocations(this.uniforms[name].location, dataType);
-					break;
-			}
+			this.uniforms[name] = {
+				location: this.gl.getUniformLocation(program, name),
+			};
+			this.enableLocations(this.uniforms[name].location, dataType);
 		});
 	}
 
-	initializeAttributeBuffer(name, dataType, location, attributeConfig) {
+	initAtttributes(program, vertexShaderCode, maxInstanceCount) {
+		const variables = this.getVertexShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "attribute");
+		variables.forEach(({name, dataType}) => {
+			const location = this.gl.getAttribLocation(program, name);
+			if (this.attributes[name] && this.attributes[name].buffer) {
+				this.gl.deleteBuffer(this.attributes[name].buffer);
+				this.attributes[name].buffer = null;
+			}
+			this.attributes[name] = this.initializeAttribute(name, dataType, location, this.webgl.attributes[name], maxInstanceCount);
+			this.enableLocations(this.attributes[name].location, dataType);
+		});
+	}
+
+	initializeAttribute(name, dataType, location, attributeConfig, maxInstanceCount) {
 		if (!attributeConfig) {
 			console.warn(`Attribute ${name} has no configuration.`);
 			return;
 		}
+		const NUM_VERTICES = 6;
 		const { gl, ext, attributes } = this;
 		const group = dataType.match(/([a-zA-Z]+)(\d?)/);
-		const dataStructure = !group ? "vec" : group[1];
 		const size = !group || group[2]==="" || isNaN(group[2]) ? 1 : parseInt(group[2]);
+		const dataStructure = !group ? "vec" : group[1];
+		const numRows = dataStructure === "mat" ? size : 1;
 		const glType = gl[attributeConfig.type || "FLOAT"];
-		const bytesPerInstance = (dataStructure === "mat" ? size * size : size) * this.getByteSize(glType);
+		const bytesPerInstance = size * numRows * this.getByteSize(glType);
 
 		const buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-		const numRows = dataStructure === "mat" ? size : 1;
 		for (let i = 0; i < numRows; i++) {
 			const offset = i * size * this.getByteSize(glType);
 			gl.vertexAttribPointer(
@@ -79,13 +86,15 @@ class Shader {
 			  bytesPerInstance,            // stride (0 = compute from size and type above)
 			  offset,            // offset in buffer
 			);
-			if (attributeConfig.instances) {
-				ext.vertexAttribDivisorANGLE(location + i, attributeConfig.instances);			
-			}
+			ext.vertexAttribDivisorANGLE(location + i, attributeConfig.instances || 0);			
 		}
+		gl.bufferData(gl.ARRAY_BUFFER, (attributeConfig.instances ? maxInstanceCount : NUM_VERTICES) * bytesPerInstance, gl[attributeConfig.usage]);
 
-
-		return buffer;
+		return { 
+			location,
+			buffer,
+			bytesPerInstance,
+		}
 	}
 
  	getByteSize(bufferType) {
@@ -117,7 +126,7 @@ class Shader {
 		}
 	}
 
-	getAttributes(vertexShader) {
+	getVertexShaderVariables(vertexShader) {
 		const groups = vertexShader.match(/(attribute|uniform) ([\w]+) ([\w]+);/g).map(line => line.match(/(attribute|uniform) ([\w]+) ([\w]+);/));
 		return groups.map(([line, attributeType, dataType, name]) => {
 			return { line, attributeType, dataType, name };

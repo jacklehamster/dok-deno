@@ -1,7 +1,11 @@
 class Engine {
+	constructor(document, config) {
+		this.document = document;
+		this.config = config;
+	}
 
 	async init() {
-		this.config = config;
+		const { document } = this;
 		if (!this.config) {
 			throw new Error("Missing config.");
 		}
@@ -10,44 +14,43 @@ class Engine {
 		const canvas = document.getElementById("canvas");
 
 		const gl = canvas.getContext("webgl", this.config.webgl.options.context);
+		console.log(gl.getSupportedExtensions());
+
 		this.gl = gl;
+		if (!gl.getExtension('OES_element_index_uint')) {
+			throw new Error("OES_element_index_uint not available.");
+		}
 		const ext = gl.getExtension('ANGLE_instanced_arrays');
 		if (!ext) {
-			throw new Error('need ANGLE_instanced_arrays');
+			throw new Error('need ANGLE_instanced_arrays.');
 		}
-		gl.getExtension('OES_element_index_uint');
 
-		gl.enable(gl.CULL_FACE);
-		gl.cullFace(gl.BACK);
+		if (this.config.webgl.options.cullFace) {
+			gl.enable(gl.CULL_FACE);
+			gl.cullFace(gl[this.config.webgl.options.cullFace]);
+		}
 
 		const shader = new Shader(gl, ext, this.config.webgl);
+		this.shader = shader;
 
 		this.sceneRenderer = new SceneRenderer(gl, shader.uniforms);
+		this.bufferRenderer = new BufferRenderer(gl, shader.attributes);
 
-		const INDEXED_BUFFER = this.config.webgl.options.indexedBuffer;
+		if (document.querySelector(".loader")) {
+			document.querySelector(".loader").classList.add("loaded");
+		}
 
-		const quadBuffer = INDEXED_BUFFER 
-			? new Float32Array([
-			    -0.5, -0.5, 0,
-			     0.5, -0.5, 0,
-			    -0.5,  0.5, 0,
-			     0.5,  0.5, 0,
-			])
-			:  new Float32Array([
-			    -0.5, -0.5, 0,
-			     0.5, -0.5, 0,
-			    -0.5,  0.5, 0,
-			    -0.5,  0.5, 0,
-			     0.5, -0.5, 0,
-			     0.5,  0.5, 0,
-			]);
+		this.startRendering(ext, shader.attributes);
+	}
 
-		const positionBuffer = shader.attributes.position.buffer;
-		gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, quadBuffer, gl.STATIC_DRAW);
-		const numVertices = quadBuffer.length / 3;
+	startRendering(ext, attributes) {
+		const { gl } = this;
+		const engine = this;
 
 		const numInstances = 5;
+
+		const matrixBuffer = attributes.matrix.buffer;
+
 		const matrixData = new Float32Array(numInstances * 16);
 		const matrices = [];
 		for (let i = 0; i < numInstances; ++i) {
@@ -58,82 +61,54 @@ class Engine {
 		      byteOffsetToMatrix,
 		      numFloatsForView));
 		}
-		const matrixBuffer = shader.attributes.matrix.buffer;
-		gl.bindBuffer(gl.ARRAY_BUFFER, matrixBuffer);
-		// just allocate the buffer
-		gl.bufferData(gl.ARRAY_BUFFER, matrixData.byteLength, gl.DYNAMIC_DRAW);
-
-		// setup colors, one per instance
-		const colorBuffer = shader.attributes.color.buffer; //gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array([
-				255, 0, 0, 255,  // red
-				0, 255, 0, 255,  // green
-				0, 0, 255, 255,  // blue
-				255, 0, 255, 255,  // magenta
-				0, 255, 255, 255,  // cyan
-			]),
-		    gl.DYNAMIC_DRAW);
 
 
-		if (INDEXED_BUFFER) {
-			const VERTICES_PER_SPRITE = 4;	//	4 corners
+		//	VIEW
+		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+		const fieldOfViewRadians = Math.PI / 2;
+		const zNear = .1;
+		const zFar = 2000;
+		engine.sceneRenderer.setPerspective(mat4.perspective(mat4.create(), fieldOfViewRadians, aspect, zNear, zFar));
+		engine.sceneRenderer.setOrtho(mat4.ortho(mat4.create(), -1, 1, -1, 1, zNear, zFar));
 
-			const INDEX_ARRAY_PER_SPRITE = new Uint32Array([
-				0,  1,  2,
-				2,  1,  3,
-			]);
-			const indexBuffer = gl.createBuffer();
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, numInstances * INDEX_ARRAY_PER_SPRITE.length * Uint32Array.BYTES_PER_ELEMENT, gl.STATIC_DRAW);
-			for (let i = 0; i < numInstances; i++) {
-				const slotIndices = INDEX_ARRAY_PER_SPRITE.map(value => value + i * VERTICES_PER_SPRITE);
-				gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, i * slotIndices.length * Uint32Array.BYTES_PER_ELEMENT, slotIndices);
-			}
-		}
+		//	position
+		const quadBuffer = new Float32Array([
+		    -0.5, -0.5, 0,
+		     0.5, -0.5, 0,
+		    -0.5,  0.5, 0,
+		    -0.5,  0.5, 0,
+		     0.5, -0.5, 0,
+		     0.5,  0.5, 0,
+		]);
+		engine.bufferRenderer.setVertexPosition(quadBuffer);
+		const numVerticesPerInstance = quadBuffer.length / 3;
 
-		if (document.querySelector(".loader")) {
-			document.querySelector(".loader").classList.add("loaded");
-		}
-
-		this.startRendering(
-			ext,
-			shader.attributes,
-			positionBuffer,
-			matrixBuffer,
-			colorBuffer,
-			matrices,
-			matrixData,
-			numVertices,
-			numInstances,
-			INDEXED_BUFFER);
-	}
-
-	startRendering(ext, attributes, positionBuffer, matrixBuffer, colorBuffer, matrices, matrixData, numVertices, numInstances, indexedBuffer) {
-		const { gl } = this;
-
-		const engine = this;
+		//	color
+		engine.bufferRenderer.setAttribute(attributes.color, 0, new Uint8Array([
+			255, 0, 0, 255,  // red
+			0, 255, 0, 255,  // green
+			0, 0, 255, 255,  // blue
+			255, 0, 255, 255,  // magenta
+			0, 255, 255, 255,  // cyan
+		]));
 
 		function loop(time) {
 			const now = Math.floor(time);
 
 			gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 
-			engine.sceneRenderer.render(time);
+			engine.sceneRenderer.setView(mat4.fromZRotation(mat4.create(), time * 0.001 * 5 * .1));
+			engine.bufferRenderer.setAttribute(attributes.isPerspective, 0, new Float32Array([1, 1, 1, 1, 1]));
+
 
 			matrices.forEach((mat, index) => {
 				mat4.fromTranslation(mat, vec3.fromValues(-.5 + index * 0.25, 0, index - 5));
 				mat4.rotateZ(mat, mat, time * 0.001 * 5 * (0.1 + 0.1 * index));
+				engine.bufferRenderer.setAttribute(attributes.matrix, index, mat);
 			});
-			gl.bindBuffer(gl.ARRAY_BUFFER, matrixBuffer);
-			gl.bufferSubData(gl.ARRAY_BUFFER, 0, matrixData);
 
 			//	DRAW CALL
-			if (indexedBuffer) {
-				ext.drawElementsInstancedANGLE(gl.TRIANGLES, 6, gl.UNSIGNED_INT, 0, numInstances);
-			} else {
-				ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, numVertices, numInstances);
-			}
+			ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, numVerticesPerInstance, numInstances);
 		  	requestAnimationFrame(loop);
 		}
 		requestAnimationFrame(loop);
