@@ -5,7 +5,20 @@ class Shader {
 		this.attributes = {};
 		this.uniforms = {};
 		this.webgl = webgl;
+		this.initGLOptions(gl, webgl.options);
 		this.linkShader(this.webgl.vertexShader, this.webgl.fragmentShader);		
+	}
+
+	initGLOptions(gl, options) {
+		if (options.cullFace) {
+			gl.enable(gl.CULL_FACE);
+			gl.cullFace(gl[options.cullFace]);
+		}
+		if (options.blend) {
+			gl.enable(gl.BLEND);
+			const [ sFactor, dFactor ] = options.blend;
+			gl.blendFunc(gl[sFactor], gl[dFactor]);
+		}
 	}
 
 	initShader(type, source) {
@@ -49,23 +62,35 @@ class Shader {
 	initAtttributes(program, vertexShaderCode, maxInstanceCount) {
 		const variables = this.getVertexShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "attribute");
 		variables.forEach(({name, dataType}) => {
-			const location = this.gl.getAttribLocation(program, name);
 			if (this.attributes[name] && this.attributes[name].buffer) {
 				this.gl.deleteBuffer(this.attributes[name].buffer);
 				this.attributes[name].buffer = null;
 			}
+			const location = this.gl.getAttribLocation(program, name);
 			this.attributes[name] = this.initializeAttribute(name, dataType, location, this.webgl.attributes[name], maxInstanceCount);
-			this.enableLocations(this.attributes[name].location, dataType);
+			if (this.attributes[name]) {
+				this.enableLocations(this.attributes[name].location, dataType);
+			}
 		});
 	}
 
 	initializeAttribute(name, dataType, location, attributeConfig, maxInstanceCount) {
 		if (!attributeConfig) {
-			console.warn(`Attribute ${name} has no configuration.`);
+			console.warn(`Attribute ${name} has no configuration. Update config/webgl/attributes.json`);
 			return;
 		}
-		const NUM_VERTICES = 6;
+		if (location < 0) {
+			console.warn(`Attribute ${name} has no location in shader.`);
+			return;
+		}
+
 		const { gl, ext, attributes } = this;
+		if (!gl[attributeConfig.usage]) {
+			console.warn(`Attribute ${name} usage is invalid: ${attributeConfig.usage}.`);
+			return;
+		}
+
+		const NUM_VERTICES = 6;
 		const group = dataType.match(/([a-zA-Z]+)(\d?)/);
 		const size = !group || group[2]==="" || isNaN(group[2]) ? 1 : parseInt(group[2]);
 		const dataStructure = !group ? "vec" : group[1];
@@ -90,10 +115,11 @@ class Shader {
 		}
 		gl.bufferData(gl.ARRAY_BUFFER, (attributeConfig.instances ? maxInstanceCount : NUM_VERTICES) * bytesPerInstance, gl[attributeConfig.usage]);
 
-		return { 
+		return {
 			location,
 			buffer,
 			bytesPerInstance,
+			instances: attributeConfig.instances,
 		}
 	}
 
@@ -131,5 +157,9 @@ class Shader {
 		return groups.map(([line, attributeType, dataType, name]) => {
 			return { line, attributeType, dataType, name };
 		})
+	}
+
+	getSupportedExtensions() {
+		return this.gl.getSupportedExtensions();		
 	}
 }

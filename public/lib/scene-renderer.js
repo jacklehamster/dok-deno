@@ -19,4 +19,9 @@ class SceneRenderer {
 		const { gl, uniforms } = this;
 		gl.uniformMatrix4fv(uniforms.ortho.location, false, orthoMatrix);
 	}
+
+	setTime(time) {
+		const { gl, uniforms } = this;
+		gl.uniform1f(uniforms.time.location, time);
+	}
 }

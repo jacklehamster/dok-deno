@@ -1,7 +1,16 @@
 {
-	"position": {
+	"vertexPosition": {
 		"type": "FLOAT",
 		"usage": "STATIC_DRAW"
+	},
+	"vertexId": {
+		"type": "UNSIGNED_BYTE",
+		"usage": "STATIC_DRAW"
+	},
+	"position": {
+		"instances": 1,
+		"type": "FLOAT",
+		"usage": "DYNAMIC_DRAW"
 	},
 	"isPerspective": {
 		"instances": 1,

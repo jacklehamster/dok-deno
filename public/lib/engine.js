@@ -12,9 +12,14 @@ class Engine {
 		const dom = new DOM(document);
 		await dom.load();
 		const canvas = document.getElementById("canvas");
+		if (config.viewport.resolution) {
+			[ canvas.width, canvas.height ] = config.viewport.resolution;
+		}
+		if (config.viewport.size) {
+			[ canvas.style.width, canvas.style.height ] = config.viewport.size.map(pixels => `${pixels}px`);
+		}
 
 		const gl = canvas.getContext("webgl", this.config.webgl.options.context);
-		console.log(gl.getSupportedExtensions());
 
 		this.gl = gl;
 		if (!gl.getExtension('OES_element_index_uint')) {
@@ -25,16 +30,15 @@ class Engine {
 			throw new Error('need ANGLE_instanced_arrays.');
 		}
 
-		if (this.config.webgl.options.cullFace) {
-			gl.enable(gl.CULL_FACE);
-			gl.cullFace(gl[this.config.webgl.options.cullFace]);
-		}
-
 		const shader = new Shader(gl, ext, this.config.webgl);
 		this.shader = shader;
 
 		this.sceneRenderer = new SceneRenderer(gl, shader.uniforms);
 		this.bufferRenderer = new BufferRenderer(gl, shader.attributes);
+		this.spriteRenderer = new SpriteRenderer(this.bufferRenderer);
+		this.spriteProviders = [
+			new DemoSprites(),
+		];
 
 		if (document.querySelector(".loader")) {
 			document.querySelector(".loader").classList.add("loaded");
@@ -48,20 +52,14 @@ class Engine {
 		const engine = this;
 
 		const numInstances = 5;
+		const numVerticesPerInstance = 6;
 
 		const matrixBuffer = attributes.matrix.buffer;
 
-		const matrixData = new Float32Array(numInstances * 16);
 		const matrices = [];
 		for (let i = 0; i < numInstances; ++i) {
-		  const byteOffsetToMatrix = i * 16 * 4;
-		  const numFloatsForView = 16;
-		  matrices.push(new Float32Array(
-		      matrixData.buffer,
-		      byteOffsetToMatrix,
-		      numFloatsForView));
+		  matrices.push(new Float32Array(16));
 		}
-
 
 		//	VIEW
 		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -71,25 +69,15 @@ class Engine {
 		engine.sceneRenderer.setPerspective(mat4.perspective(mat4.create(), fieldOfViewRadians, aspect, zNear, zFar));
 		engine.sceneRenderer.setOrtho(mat4.ortho(mat4.create(), -1, 1, -1, 1, zNear, zFar));
 
-		//	position
-		const quadBuffer = new Float32Array([
-		    -0.5, -0.5, 0,
-		     0.5, -0.5, 0,
-		    -0.5,  0.5, 0,
-		    -0.5,  0.5, 0,
-		     0.5, -0.5, 0,
-		     0.5,  0.5, 0,
-		]);
-		engine.bufferRenderer.setVertexPosition(quadBuffer);
-		const numVerticesPerInstance = quadBuffer.length / 3;
+		engine.bufferRenderer.initializeVertexAttributes(attributes);
 
 		//	color
 		engine.bufferRenderer.setAttribute(attributes.color, 0, new Uint8Array([
-			255, 0, 0, 255,  // red
-			0, 255, 0, 255,  // green
-			0, 0, 255, 255,  // blue
-			255, 0, 255, 255,  // magenta
-			0, 255, 255, 255,  // cyan
+			... Utils.colorToBytes(0xFF0000),
+			... Utils.colorToBytes(0x00FF00),
+			... Utils.colorToBytes(0x0000FF),
+			... Utils.colorToBytes(0xFF00FF),
+			... Utils.colorToBytes(0x00FFFF),
 		]));
 
 		function loop(time) {
@@ -97,9 +85,11 @@ class Engine {
 
 			gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 
+			engine.sceneRenderer.setTime(now);
 			engine.sceneRenderer.setView(mat4.fromZRotation(mat4.create(), time * 0.001 * 5 * .1));
 			engine.bufferRenderer.setAttribute(attributes.isPerspective, 0, new Float32Array([1, 1, 1, 1, 1]));
 
+			engine.spriteRenderer.updateSprites(engine.spriteProviders);
 
 			matrices.forEach((mat, index) => {
 				mat4.fromTranslation(mat, vec3.fromValues(-.5 + index * 0.25, 0, index - 5));

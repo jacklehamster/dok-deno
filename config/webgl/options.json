@@ -9,5 +9,6 @@
 		"premultipliedAlpha": true
 	},
 	"maxInstanceCount": 1000,
-	"cullFace": "BACK"
+	"cullFace": "BACK",
+	"blend": ["SRC_ALPHA", "ONE_MINUS_SRC_ALPHA"]
 }

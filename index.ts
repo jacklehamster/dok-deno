@@ -67,6 +67,10 @@ async function fileExists(path: string) {
 	return true; 
 }
 
+function capitalize(str: string) {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 async function generateCode() {
 	console.log(yellow(`generating code.`));
 	const { config } = await getFilesAsData("config");
