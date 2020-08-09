@@ -113,34 +113,50 @@ class Shader {
 			);
 			ext.vertexAttribDivisorANGLE(location + i, attributeConfig.instances || 0);			
 		}
-		gl.bufferData(gl.ARRAY_BUFFER, (attributeConfig.instances ? maxInstanceCount : NUM_VERTICES) * bytesPerInstance, gl[attributeConfig.usage]);
+		const bufferSize = (attributeConfig.instances ? maxInstanceCount : NUM_VERTICES) * bytesPerInstance;
+		gl.bufferData(gl.ARRAY_BUFFER, bufferSize, gl[attributeConfig.usage]);
 
 		return {
 			location,
 			buffer,
 			bytesPerInstance,
+			typedArray: this.createTypedArray(glType, bufferSize),
 			instances: attributeConfig.instances,
 		}
 	}
 
- 	getByteSize(bufferType) {
+	createTypedArray(bufferType, bufferSize) {
+ 		const typedArrayClass = this.getTypeArrayClass(bufferType);
+ 		if (typedArrayClass) {
+ 			return new typedArrayClass(bufferSize / typedArrayClass.BYTES_PER_ELEMENT);
+ 		}
+ 		return null;
+	}
+
+	getTypeArrayClass(bufferType) {
  		const { gl } = this;
  		switch(bufferType) {
  			case gl.BYTE:
-				return Int8Array.BYTES_PER_ELEMENT;
+				return Int8Array;
  			case gl.UNSIGNED_BYTE:
-				return Uint8Array.BYTES_PER_ELEMENT;
+				return Uint8Array;
 			case gl.SHORT:
-				return Int16Array.BYTES_PER_ELEMENT;
+				return Int16Array;
 			case gl.UNSIGNED_SHORT:
-				return Uint16Array.BYTES_PER_ELEMENT;
+				return Uint16Array;
 			case gl.INT:
-				return Int32Array.BYTES_PER_ELEMENT;
+				return Int32Array;
 			case gl.UNSIGNED_INT:
-				return Uint32Array.BYTES_PER_ELEMENT;
+				return Uint32Array;
 			case gl.FLOAT:
-				return Float32Array.BYTES_PER_ELEMENT;
+				return Float32Array;
  		}
+ 		return null;		
+	}
+
+ 	getByteSize(bufferType) {
+ 		const typedArrayClass = this.getTypeArrayClass(bufferType);
+ 		return typedArrayClass == null ? 0 : typedArrayClass.BYTES_PER_ELEMENT;
  	}
 
 	enableLocations(loc, dataType) {

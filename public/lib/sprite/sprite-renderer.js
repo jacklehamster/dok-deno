@@ -1,9 +1,10 @@
 class SpriteRenderer {
-	constructor(bufferRenderer) {
+	constructor(bufferRenderer, attributes) {
 		this.bufferRenderer = bufferRenderer;
 		this.renderedSprites = {};
 		this.nextBufferIndex = 0;
 		this.recycledRenderedSprites = [];
+		this.attributes = attributes;
 	}
 
 	fetchNextRenderedSprite(providerId) {
@@ -13,6 +14,7 @@ class SpriteRenderer {
 				providerId,
 				updateTime: 0,
 				bufferIndex: this.nextBufferIndex++,
+				color: 0xFF000000,
 			};
 	}
 
@@ -50,4 +52,36 @@ class SpriteRenderer {
 		console.log(`delete ${renderedSprite}`);
 		this.recycledBufferIndex.push(renderedSprite.bufferIndex);
 	}
+
+	initializeVertexAttributes(attributes) {
+		for (let name in attributes) {
+			const attribute = attributes[name];
+			if (attribute && !attribute.instances) {
+				this.initializeVertexAttribute(name, attribute);
+			}
+		}		
+	}
+
+	initializeVertexAttribute(name, attribute) {
+		switch (name) {
+			case "vertexPosition":
+				this.bufferRenderer.setAttribute(attribute, 0,
+					new Float32Array(Utils.makeVertexArray(
+					    [ -0.5, -0.5 ],
+					    [ 0.5, -0.5 ],
+					    [ -0.5,  0.5 ],
+					    [ 0.5,  0.5 ],
+					))
+				);
+				break;
+			case "vertexId":
+				this.bufferRenderer.setAttribute(attribute, 0,
+					new Uint8Array(Utils.makeVertexArray([0], [1], [2], [3]))
+				);
+				break;
+			default:
+				console.warn(`Non-instanced attribute not initialized in Sprite: ${name}.`);
+				break;
+		}
+	}	
 }

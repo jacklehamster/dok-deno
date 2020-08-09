@@ -34,7 +34,7 @@ class Engine {
 		this.shader = shader;
 
 		this.sceneRenderer = new SceneRenderer(gl, shader.uniforms);
-		this.bufferRenderer = new BufferRenderer(gl, shader.attributes);
+		this.bufferRenderer = new BufferRenderer(gl);
 		this.spriteRenderer = new SpriteRenderer(this.bufferRenderer);
 		this.spriteProviders = [
 			new DemoSprites(),
@@ -69,15 +69,30 @@ class Engine {
 		engine.sceneRenderer.setPerspective(mat4.perspective(mat4.create(), fieldOfViewRadians, aspect, zNear, zFar));
 		engine.sceneRenderer.setOrtho(mat4.ortho(mat4.create(), -1, 1, -1, 1, zNear, zFar));
 
-		engine.bufferRenderer.initializeVertexAttributes(attributes);
+		engine.spriteRenderer.initializeVertexAttributes(attributes);
 
 		//	color
-		engine.bufferRenderer.setAttribute(attributes.color, 0, new Uint8Array([
+		engine.bufferRenderer.setAttribute(attributes.colors, 0, new Uint8Array([
 			... Utils.colorToBytes(0xFF0000),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0x00FF00),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0x0000FF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFF00FF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0x00FFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
+			... Utils.colorToBytes(0xFFFFFF),
 		]));
 
 		function loop(time) {
@@ -87,9 +102,11 @@ class Engine {
 
 			engine.sceneRenderer.setTime(now);
 			engine.sceneRenderer.setView(mat4.fromZRotation(mat4.create(), time * 0.001 * 5 * .1));
-			engine.bufferRenderer.setAttribute(attributes.isPerspective, 0, new Float32Array([1, 1, 1, 1, 1]));
+			engine.bufferRenderer.setAttribute(attributes.isPerspective, 0, new Uint8Array([
+				255, 255, 255, 255, 255
+			]));
 
-			engine.spriteRenderer.updateSprites(engine.spriteProviders);
+			engine.spriteRenderer.updateSprites(engine.spriteProviders, attributes);
 
 			matrices.forEach((mat, index) => {
 				mat4.fromTranslation(mat, vec3.fromValues(-.5 + index * 0.25, 0, index - 5));

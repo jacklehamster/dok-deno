@@ -14,10 +14,11 @@
 	},
 	"isPerspective": {
 		"instances": 1,
-		"type": "FLOAT",
+		"type": "UNSIGNED_BYTE",
+		"normalize": true,
 		"usage": "STATIC_DRAW"
 	},
-	"color": {
+	"colors": {
 		"instances": 1,
 		"type": "UNSIGNED_BYTE",
 		"normalize": true,

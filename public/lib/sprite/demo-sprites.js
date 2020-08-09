@@ -11,6 +11,15 @@ class DemoSprites extends SpriteStorage {
 			{
 				color: 0xFFFF00,
 			},
+			{
+				color: 0x00FF00,
+			},
+			{
+				color: 0x00FFFF,
+			},
+			{
+				color: 0x0000FF,
+			},
 		];
 	}
 }
