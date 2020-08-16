@@ -3,7 +3,7 @@ class DOM {
 		this.document = document;
 	}
 
-	load() {
+	async load() {
 		return new Promise((resolve, reject) => {
 			this.document.addEventListener("DOMContentLoaded", () => {
 				resolve(this.document);

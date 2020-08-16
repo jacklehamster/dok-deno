@@ -44,12 +44,21 @@ class Shader {
 		  throw new Error('Unable to initialize the shader program:\n' + this.gl.getProgramInfoLog(program));
 		}
 
-		this.initUniforms(program, vertexShaderCode);
+		this.initUniforms(program, vertexShaderCode, fragmentShaderCode);
 		this.initAtttributes(program, vertexShaderCode, this.webgl.options.maxInstanceCount);
+		this.verifyAttributes();
 	}
 
-	initUniforms(program, vertexShaderCode) {
-		const variables = this.getVertexShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "uniform");
+	verifyAttributes() {
+		for (let name in this.webgl.attributes) {
+			if (!this.attributes[name]) {
+				console.warn(`Configured attribute ${name} does not exist in shaders.`);
+			}
+		}
+	}
+
+	initUniforms(program, vertexShaderCode, fragmentShaderCode) {
+		const variables = this.getShaderVariables(vertexShaderCode, fragmentShaderCode).filter(({attributeType}) => attributeType === "uniform");
 		variables.forEach(({name, dataType}) => {
 			//	dataType is vec4 / mat4 etc...
 			this.uniforms[name] = {
@@ -60,7 +69,7 @@ class Shader {
 	}
 
 	initAtttributes(program, vertexShaderCode, maxInstanceCount) {
-		const variables = this.getVertexShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "attribute");
+		const variables = this.getShaderVariables(vertexShaderCode).filter(({attributeType}) => attributeType === "attribute");
 		variables.forEach(({name, dataType}) => {
 			if (this.attributes[name] && this.attributes[name].buffer) {
 				this.gl.deleteBuffer(this.attributes[name].buffer);
@@ -168,11 +177,16 @@ class Shader {
 		}
 	}
 
-	getVertexShaderVariables(vertexShader) {
-		const groups = vertexShader.match(/(attribute|uniform) ([\w]+) ([\w]+);/g).map(line => line.match(/(attribute|uniform) ([\w]+) ([\w]+);/));
-		return groups.map(([line, attributeType, dataType, name]) => {
-			return { line, attributeType, dataType, name };
-		})
+	getShaderVariables(...shaders) {
+		const variables = [];
+		shaders.forEach(shader => {
+			const groups = shader.match(/(attribute|uniform) ([\w]+) ([\w]+)(\[.+\])?;/g)
+				.map(line => line.match(/(attribute|uniform) ([\w]+) ([\w]+)(\[.+\])?;/));
+			variables.push(... groups.map(([line, attributeType, dataType, name]) => {
+				return { line, attributeType, dataType, name };
+			}));
+		});
+		return variables;
 	}
 
 	getSupportedExtensions() {

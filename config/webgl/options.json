@@ -9,6 +9,7 @@
 		"premultipliedAlpha": true
 	},
 	"maxInstanceCount": 1000,
+	"textureSize": 4096,
 	"cullFace": "BACK",
 	"blend": ["SRC_ALPHA", "ONE_MINUS_SRC_ALPHA"]
 }

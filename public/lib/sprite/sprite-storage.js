@@ -1,6 +1,6 @@
 class SpriteStorage extends ISpriteProvider {
-	constructor(id, sprites) {
-		super(id);
+	constructor(sprites) {
+		super();
 		this.sprites = sprites || [];
 	}
 

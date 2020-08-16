@@ -5,7 +5,7 @@ class Engine {
 	}
 
 	async init() {
-		const { document } = this;
+		const { document, config } = this;
 		if (!this.config) {
 			throw new Error("Missing config.");
 		}
@@ -30,7 +30,9 @@ class Engine {
 			throw new Error('need ANGLE_instanced_arrays.');
 		}
 
-		const shader = new Shader(gl, ext, this.config.webgl);
+		this.focusFixer = new FocusFixer(canvas);
+
+		const shader = new Shader(gl, ext, config.webgl);
 		this.shader = shader;
 
 		this.sceneRenderer = new SceneRenderer(gl, shader.uniforms);
@@ -39,6 +41,11 @@ class Engine {
 		this.spriteProviders = [
 			new DemoSprites(),
 		];
+		this.imageLoader = new ImageLoader();
+		this.textureAtlas = new TextureManager(gl, shader.uniforms, config.webgl.options);
+
+		const img = await this.imageLoader.loadImage("https://cache-grab.herokuapp.com/https://media.vanityfair.com/photos/5ddd5c759aeeef0008170fc0/master/pass/a-scarlett-johansson-oscars-tout.jpg");
+		this.textureAtlas.setImage(img, 0, 0, 0);
 
 		if (document.querySelector(".loader")) {
 			document.querySelector(".loader").classList.add("loaded");
@@ -95,27 +102,70 @@ class Engine {
 			... Utils.colorToBytes(0xFFFFFF),
 		]));
 
+		engine.bufferRenderer.setAttribute(attributes.textureCoordinates, 0, new Uint16Array([
+			0, 0, 500, 500,
+			1500, 0, 500, 500,
+			0, 1500, 500, 500,
+			1500, 1500, 500, 500,
+
+			0, 0, 500, 500,
+			500, 0, 500, 500,
+			0, 500, 500, 500,
+			500, 500, 500, 500,
+			
+			0, 0, 500, 500,
+			500, 0, 500, 500,
+			0, 500, 500, 500,
+			500, 500, 500, 500,
+			
+			0, 0, 500, 500,
+			500, 0, 500, 500,
+			0, 500, 500, 500,
+			500, 500, 500, 500,
+			
+			0, 0, 500, 500,
+			1500, 0, 500, 500,
+			0, 1500, 500, 500,
+			1500, 1500, 500, 500,			
+		]));
+
+		engine.sceneRenderer.setView(mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 0, -1)));
+
+
 		function loop(time) {
-			const now = Math.floor(time);
+			if (!engine.focusFixer.focused) {
+			  	requestAnimationFrame(loop);
+				return;
+			}
+
+			const now = Math.round(time);
 
 			gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 
 			engine.sceneRenderer.setTime(now);
-			engine.sceneRenderer.setView(mat4.fromZRotation(mat4.create(), time * 0.001 * 5 * .1));
+//			engine.sceneRenderer.setView(mat4.fromZRotation(mat4.create(), now * 0.001 * 5 * .1));
+
 			engine.bufferRenderer.setAttribute(attributes.isPerspective, 0, new Uint8Array([
 				255, 255, 255, 255, 255
 			]));
 
-			engine.spriteRenderer.updateSprites(engine.spriteProviders, attributes);
+			for (let i = 0; i < engine.spriteProviders.length; i++) {
+				engine.spriteRenderer.updateSprites(engine.spriteProviders[i]);
+			}
 
 			matrices.forEach((mat, index) => {
+				mat4.identity(mat);
 				mat4.fromTranslation(mat, vec3.fromValues(-.5 + index * 0.25, 0, index - 5));
-				mat4.rotateZ(mat, mat, time * 0.001 * 5 * (0.1 + 0.1 * index));
+				mat4.rotateZ(mat, mat, now * 0.001 * 5 * (0.1 + 0.1 * index));
 				engine.bufferRenderer.setAttribute(attributes.matrix, index, mat);
 			});
 
 			//	DRAW CALL
 			ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, numVerticesPerInstance, numInstances);
+
+
+
+
 		  	requestAnimationFrame(loop);
 		}
 		requestAnimationFrame(loop);
