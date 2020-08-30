@@ -2,6 +2,7 @@ class Engine {
 	constructor(document, config) {
 		this.document = document;
 		this.config = config;
+		this.onLoopListeners = [];
 	}
 
 	async init() {
@@ -52,6 +53,18 @@ class Engine {
 		}
 
 		this.startRendering(ext, shader.attributes);
+	}
+
+	addOnLoopListener(listener) {
+		if (this.onLoopListeners.indexOf(listener) < 0) {
+			this.onLoopListeners.push(listener);
+		}
+	}
+
+	removeOnLoopListener(listener) {
+		if (this.onLoopListeners.indexOf(listener) >= 0) {
+			this.onLoopListeners.splice(this.onLoopListeners.indexOf(listener), 1);
+		}		
 	}
 
 	startRendering(ext, attributes) {
@@ -129,7 +142,7 @@ class Engine {
 			1500, 1500, 500, 500,			
 		]));
 
-		engine.sceneRenderer.setView(mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 0, -1)));
+		engine.sceneRenderer.setView(mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 0, 0)));
 
 
 		function loop(time) {
@@ -164,7 +177,9 @@ class Engine {
 			ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, numVerticesPerInstance, numInstances);
 
 
-
+			for (let i = 0; i < engine.onLoopListeners.length; i++) {
+				engine.onLoopListeners[i]();
+			}
 
 		  	requestAnimationFrame(loop);
 		}

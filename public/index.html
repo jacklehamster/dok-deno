@@ -42,7 +42,7 @@
 
 			.container {
 			  display: flex;
-			  flex-direction: column;
+			  flex-direction: row;
 			  justify-content: center;
 			  align-items: center;
 			  width: 100%;
@@ -51,14 +51,14 @@
 			}
 
 			.loader {
-			  border: 16px solid #f3f3f3;
-			  border-radius: 50%;
-			  border-top: 16px solid #3498db;
-			  border-left: 16px solid #54a8eb;
-			  border-right: 16px solid #84b8fb;
-			  border-bottom: 16px solid #a4d8fb;
-			  -webkit-animation: spin 2s linear infinite; /* Safari */
-			  animation: spin .3s linear infinite;
+				border: 16px solid #f3f3f3;
+				border-radius: 50%;
+				border-top: 16px solid #3498db;
+				border-left: 16px solid #54a8eb;
+				border-right: 16px solid #84b8fb;
+				border-bottom: 16px solid #a4d8fb;
+				-webkit-animation: spin 2s linear infinite; /* Safari */
+				animation: spin .3s linear infinite;
 				width: 100px;
 				height: 100px;
 				margin-top: -50px;
@@ -71,6 +71,12 @@
 
 			.loader.loaded {
 				display: none;
+			}
+
+			.fps {
+				position: absolute;
+				color: white;
+				z-index: 1
 			}
 
 			@-webkit-keyframes spin {
@@ -110,9 +116,32 @@
 
 	</head>
 	<body>
+		<div class="fps">FPS</div>
 		<div class="container">
 			<div class="loader"></div>
 			<canvas id="canvas"></canvas>		
+			<div style="width: 500px; height: 90%; border: 1px solid black; margin: 50px;">
+				<div style="width: 100%; height: 100%; background-color: #00000099;">
+					<div>
+						Code goes here.
+					</div>
+				</div>
+			</div>
+		</div>
 		</div>
 	</body>
+	<script>
+		let index = 0;
+		const times = [];
+		const fpsDiv = document.querySelector(".fps");
+		engine.addOnLoopListener(() => {
+			if (times.length < 100) {
+				times.push(0);
+			}
+			times[index] = Date.now();
+			const fps = (times.length / ((times[index] - times[(index + 1) % times.length]) / 1000)).toFixed(1);
+			index = (index + 1) % times.length;
+			fpsDiv.innerText = fps;
+		});
+	</script>
 </html>
