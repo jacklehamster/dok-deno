@@ -1,7 +1,7 @@
-import { serve } from "https://deno.land/std@0.61.0/http/server.ts";
-import { serveFile } from "https://deno.land/std@0.61.0/http/file_server.ts";
-import { walk, readJson, readFileStr, writeFileStr, ensureDir } from "https://deno.land/std/fs/mod.ts";
-import { green, cyan, bold, yellow, red } from "https://deno.land/std@0.61.0/fmt/colors.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
+import { serveFile } from "https://deno.land/std/http/file_server.ts";
+import { walk, readJson, ensureDir } from "https://deno.land/std/fs/mod.ts";
+import { green, cyan, bold, yellow, red } from "https://deno.land/std/fmt/colors.ts";
 
 function assignData(root: any, path: string[], index: number, data: object) {
 	if (index == path.length - 1) {
@@ -36,7 +36,7 @@ async function getFilesAsData(filePath: string) {
 					assignData(result, entry.path.split("/"), 0, data);
 					break;
 				default:
-					const text: any = await readFileStr(entry.path);
+					const text: any = await Deno.readTextFile(entry.path);
 					assignData(result, entry.path.split("/"), 0, text);
 					break;
 			}
@@ -46,7 +46,7 @@ async function getFilesAsData(filePath: string) {
 }
 
 async function useTemplate(template: string, replacementMap: any) {
-	let str: string = await readFileStr(template);
+	let str: string = await Deno.readTextFile(template);
 	for (let key in replacementMap) {
 		str = str.split(key).join(replacementMap[key]);
 	}
@@ -78,7 +78,7 @@ async function generateCode() {
 	const configCode = await useTemplate("template/config-template.js", {
 		CONFIGURATION: JSON.stringify(config, null, 3),
 	});
-	await writeFileStr("public/generated/config.js", configCode);
+	await Deno.writeTextFile("public/generated/config.js", configCode);
 }
 
 async function initialize() {
