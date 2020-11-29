@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 import { serveFile } from "https://deno.land/std/http/file_server.ts";
-import { walk, readJson, ensureDir } from "https://deno.land/std/fs/mod.ts";
+import { walk, ensureDir } from "https://deno.land/std/fs/mod.ts";
+import { readJson } from 'https://deno.land/x/jsonfile/mod.ts';
 import { green, cyan, bold, yellow, red } from "https://deno.land/std/fmt/colors.ts";
 
 function assignData(root: any, path: string[], index: number, data: object) {
