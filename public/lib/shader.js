@@ -129,17 +129,8 @@ class Shader {
 			location,
 			buffer,
 			bytesPerInstance,
-			typedArray: this.createTypedArray(glType, bufferSize),
 			instances: attributeConfig.instances,
 		}
-	}
-
-	createTypedArray(bufferType, bufferSize) {
- 		const typedArrayClass = this.getTypeArrayClass(bufferType);
- 		if (typedArrayClass) {
- 			return new typedArrayClass(bufferSize / typedArrayClass.BYTES_PER_ELEMENT);
- 		}
- 		return null;
 	}
 
 	getTypeArrayClass(bufferType) {

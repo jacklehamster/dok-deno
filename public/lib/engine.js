@@ -97,18 +97,22 @@ class Engine {
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
+
 			... Utils.colorToBytes(0x00FF00),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
+
 			... Utils.colorToBytes(0x0000FF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
+
 			... Utils.colorToBytes(0xFF00FF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
+
 			... Utils.colorToBytes(0x00FFFF),
 			... Utils.colorToBytes(0xFFFFFF),
 			... Utils.colorToBytes(0xFFFFFF),
@@ -163,7 +167,7 @@ class Engine {
 			]));
 
 			for (let i = 0; i < engine.spriteProviders.length; i++) {
-				engine.spriteRenderer.updateSprites(engine.spriteProviders[i]);
+//				engine.spriteRenderer.updateSprites(engine.spriteProviders[i]);
 			}
 
 			matrices.forEach((mat, index) => {

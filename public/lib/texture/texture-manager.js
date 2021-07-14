@@ -35,7 +35,8 @@ class TextureManager {
 		}
 		gl.texSubImage2D(gl.TEXTURE_2D, 0, x || 0, y || 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
 		gl.generateMipmap(gl.TEXTURE_2D);
+		return {
+			index, x, y, width: image.nativeWidth, height: image.nativeHeight,
+		};
 	}
-
-
 }

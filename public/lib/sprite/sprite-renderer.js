@@ -8,50 +8,50 @@ class SpriteRenderer {
 		this.tempQuadArray = [];
 	}
 
-	fetchNextRenderedQuad(providerId) {
-		return this.recycledRenderedQuads.length 
-			? this.recycledRenderedQuads.pop()
-			: {
-				bufferIndex: this.nextBufferIndex++,
-			};
-	}
+	// fetchNextRenderedQuad(providerId) {
+	// 	return this.recycledRenderedQuads.length 
+	// 		? this.recycledRenderedQuads.pop()
+	// 		: {
+	// 			bufferIndex: this.nextBufferIndex++,
+	// 		};
+	// }
 
-	updateSprites(spriteProvider) {
-		const numQuadsPerSprite = spriteProvider.numQuadsPerSprite();
-		const providerId = spriteProvider.id;
-		if (!this.renderedQuads[providerId]) {
-			this.renderedQuads[providerId] = [];
-		}
-		const renderList = this.renderedQuads[providerId];
-		const numSprites = spriteProvider.count();
+	// updateSprites(spriteProvider) {
+	// 	const numQuadsPerSprite = spriteProvider.numQuadsPerSprite();
+	// 	const providerId = spriteProvider.id;
+	// 	if (!this.renderedQuads[providerId]) {
+	// 		this.renderedQuads[providerId] = [];
+	// 	}
+	// 	const renderList = this.renderedQuads[providerId];
+	// 	const numSprites = spriteProvider.count();
 
-		while (renderList.length < numSprites * numQuadsPerSprite) {
-			renderList.push(this.fetchNextRenderedQuad(providerId));
-		}
+	// 	while (renderList.length < numSprites * numQuadsPerSprite) {
+	// 		renderList.push(this.fetchNextRenderedQuad(providerId));
+	// 	}
 
-		this.tempQuadArray.length = numQuadsPerSprite;
-		for (let i = 0; i < numSprites; i++) {
-			for (let q = 0; q < numQuadsPerSprite; q++) {
-				this.tempQuadArray[q] = renderList[i * numQuadsPerSprite + q];
-			}
-			const sprite = spriteProvider.getSprite(i);
-			this.renderSprite(sprite, this.tempQuadArray);
-		}
+	// 	this.tempQuadArray.length = numQuadsPerSprite;
+	// 	for (let i = 0; i < numSprites; i++) {
+	// 		for (let q = 0; q < numQuadsPerSprite; q++) {
+	// 			this.tempQuadArray[q] = renderList[i * numQuadsPerSprite + q];
+	// 		}
+	// 		const sprite = spriteProvider.getSprite(i);
+	// 		this.renderSprite(sprite, this.tempQuadArray);
+	// 	}
 
-		while (renderList.length > numSprites * numQuadsPerSprite) {
-			this.deleteSprite(renderList.pop());
-		}
-	}
+	// 	while (renderList.length > numSprites * numQuadsPerSprite) {
+	// 		this.deleteSprite(renderList.pop());
+	// 	}
+	// }
 
-	renderSprite(sprite, quads) {
-//		console.log(`render`, sprite, renderedSprite);
+	// renderSprite(sprite, quads) {
+	// 	// console.log(`render`, sprite, quads);
 		
-	}
+	// }
 
-	deleteSprite(renderedQuad) {
-		console.log(`delete ${renderedQuad}`);
-		this.recycledBufferIndex.push(renderedQuad.bufferIndex);
-	}
+	// deleteSprite(renderedQuad) {
+	// 	console.log(`delete ${renderedQuad}`);
+	// 	this.recycledBufferIndex.push(renderedQuad.bufferIndex);
+	// }
 
 	initializeVertexAttributes(attributes) {
 		for (let name in attributes) {
@@ -73,6 +73,7 @@ class SpriteRenderer {
 					    [ 0.5,  0.5 ],
 					))
 				);
+
 				break;
 			default:
 				console.warn(`Non-instanced attribute not initialized in Sprite: ${name}.`);
